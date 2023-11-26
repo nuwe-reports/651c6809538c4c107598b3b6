@@ -1,0 +1,41 @@
+# Imagen base para compilar y ejecutar pruebas
+FROM maven:latest as builder
+
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Copiar el archivo pom.xml para descargar las dependencias
+COPY pom.xml .
+
+# Descargar dependencias
+RUN mvn dependency:go-offline
+
+# Copiar archivos de recursos
+COPY src/main/resources ./src/main/resources
+
+# Copiar el código fuente
+COPY src ./src
+
+# Ejecutar pruebas
+RUN mvn test
+
+# Compilar la aplicación
+RUN mvn package
+
+# Segunda etapa para la ejecución
+FROM openjdk:latest
+
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Copiar el archivo JAR desde el contenedor de construcción al contenedor final
+COPY --from=builder /app/target/*.jar techhubapplication.jar 
+# Copiar el archivo de configuración
+COPY src/main/resources/application.properties .
+
+# Exponer el puerto en el que se ejecutará la aplicación
+EXPOSE 8080
+
+# Comando para ejecutar la aplicación
+CMD ["java", "-jar", "techhubapplication.jar"]
+
