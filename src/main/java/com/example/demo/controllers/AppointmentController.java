@@ -51,13 +51,30 @@ public class AppointmentController {
     }
 
     @PostMapping("/appointment")
-    public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment){
-        /** TODO 
-         * Implement this function, which acts as the POST /api/appointment endpoint.
-         * Make sure to check out the whole project. Specially the Appointment.java class
-         */
-        return new ResponseEntity<>(HttpStatus.I_AM_A_TEAPOT);
-    }
+	public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment) {
+		Appointment newAppointment = new Appointment(appointment.getPatient(), appointment.getDoctor(),
+				appointment.getRoom(), appointment.getStartsAt(), appointment.getFinishesAt());
+
+		if (newAppointment.getStartsAt().equals(newAppointment.getFinishesAt())) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		} else {
+			List<Appointment> appointmentList = appointmentRepository.findAll();
+			boolean notOverlaps = true;
+			int i = 0;
+
+			while (i < appointmentList.size() && notOverlaps) {
+				notOverlaps = !newAppointment.overlaps(appointmentList.get(i));
+				i++;
+			}
+
+			if (notOverlaps) {
+				appointmentRepository.save(newAppointment);
+				return new ResponseEntity<>(HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+			}
+		}
+	}
 
 
     @DeleteMapping("/appointments/{id}")
