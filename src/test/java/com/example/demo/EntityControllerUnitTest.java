@@ -1,47 +1,39 @@
 
 package com.example.demo;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import java.time.LocalDateTime;
-import java.time.format.*;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
-import com.example.demo.controllers.*;
-import com.example.demo.repositories.*;
-import com.example.demo.entities.*;
+import com.example.demo.controllers.DoctorController;
+import com.example.demo.controllers.PatientController;
+import com.example.demo.controllers.RoomController;
+import com.example.demo.entities.Doctor;
+import com.example.demo.entities.Patient;
+import com.example.demo.entities.Room;
+import com.example.demo.repositories.DoctorRepository;
+import com.example.demo.repositories.PatientRepository;
+import com.example.demo.repositories.RoomRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-
-/** TODO
- * Implement all the unit test in its corresponding class.
- * Make sure to be as exhaustive as possible. Coverage is checked ;)
+/**
+ * TODO Implement all the unit test in its corresponding class. Make sure to be
+ * as exhaustive as possible. Coverage is checked ;)
  */
-
-
 
 @WebMvcTest(DoctorController.class)
 class DoctorControllerUnitTest {
@@ -103,68 +95,60 @@ class DoctorControllerUnitTest {
 @WebMvcTest(PatientController.class)
 class PatientControllerUnitTest {
 
-    @MockBean
-    private PatientRepository patientRepository;
+	@MockBean
+	private PatientRepository patientRepository;
 
-    @Autowired
-    private MockMvc mockMvc;
+	@Autowired
+	private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+	@Autowired
+	private ObjectMapper objectMapper;
 
-    @Test
-    void shouldGetAllPatients() throws Exception {
-        List<Patient> patients = Arrays.asList(new Patient("Juana", "Sosa", 53, "jsosa@hospital.com"),
-        		new Patient("Albert", "Triviño", 23, "Atrivino@hospital.com")
-        );
+	@Test
+	void shouldGetAllPatients() throws Exception {
+		List<Patient> patients = Arrays.asList(new Patient("Juana", "Sosa", 53, "jsosa@hospital.com"),
+				new Patient("Albert", "Triviño", 23, "Atrivino@hospital.com"));
 
-        when(patientRepository.findAll()).thenReturn(patients);
+		when(patientRepository.findAll()).thenReturn(patients);
 
-        mockMvc.perform(get("/api/patients"))
-                .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(patients)));
-    }
+		mockMvc.perform(get("/api/patients")).andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(patients)));
+	}
 
-    @Test
-    void shouldGetPatientById() throws Exception {
-        Patient patient = new Patient("Juana", "Sosa", 53, "jsosa@hospital.com");
+	@Test
+	void shouldGetPatientById() throws Exception {
+		Patient patient = new Patient("Juana", "Sosa", 53, "jsosa@hospital.com");
 
-        when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
+		when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
 
-        mockMvc.perform(get("/api/patients/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(patient)));
-    }
+		mockMvc.perform(get("/api/patients/1")).andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(patient)));
+	}
 
-    @Test
-    void shouldCreatePatient() throws Exception {
-        Patient patientToCreate = new Patient("Alice", "Smith", 25, "alice.smith@example.com");
+	@Test
+	void shouldCreatePatient() throws Exception {
+		Patient patientToCreate = new Patient("Alice", "Smith", 25, "alice.smith@example.com");
 
-        mockMvc.perform(post("/api/patient")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(patientToCreate)))
-                .andExpect(status().isCreated());
-    }
+		mockMvc.perform(post("/api/patient").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(patientToCreate))).andExpect(status().isCreated());
+	}
 
-    @Test
-    void shouldDeletePatientById() throws Exception {
-       
-        Patient existingPatient = new Patient("Juana", "Sosa", 53, "jsosa@hospital.com");
+	@Test
+	void shouldDeletePatientById() throws Exception {
 
-       
-        when(patientRepository.findById(1L)).thenReturn(Optional.of(existingPatient));
+		Patient existingPatient = new Patient("Juana", "Sosa", 53, "jsosa@hospital.com");
 
-        mockMvc.perform(delete("/api/patients/1"))
-                .andExpect(status().isOk());
-        }
+		when(patientRepository.findById(1L)).thenReturn(Optional.of(existingPatient));
 
-    @Test
-    void shouldDeleteAllPatients() throws Exception {
-        mockMvc.perform(delete("/api/patients"))
-                .andExpect(status().isOk());
-        }
+		mockMvc.perform(delete("/api/patients/1")).andExpect(status().isOk());
+	}
+
+	@Test
+	void shouldDeleteAllPatients() throws Exception {
+		mockMvc.perform(delete("/api/patients")).andExpect(status().isOk());
+	}
 }
-/*
+
 @WebMvcTest(RoomController.class)
 class RoomControllerUnitTest {
 
@@ -178,87 +162,45 @@ class RoomControllerUnitTest {
 	private ObjectMapper objectMapper;
 
 	@Test
-	void shouldCreateRoom() throws Exception {
-		Room room = new Room("gynecology");
-		mockMvc.perform(post("/api/room").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(room))).andExpect(status().isCreated());
+	void shouldGetAllRooms() throws Exception {
+		List<Room> rooms = Arrays.asList(new Room("gynecology"), new Room("dermatology"));
+
+		when(roomRepository.findAll()).thenReturn(rooms);
+
+		mockMvc.perform(get("/api/rooms")).andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(rooms)));
 	}
 
 	@Test
-	void shouldGetRoomById() throws Exception {
+	void shouldGetRoomByRoomName() throws Exception {
 		Room room = new Room("gynecology");
 
-		Optional<Room> opt = Optional.of(room);
+		when(roomRepository.findByRoomName("gynecology")).thenReturn(Optional.of(room));
 
-		assertThat(opt).isPresent();
-		assertThat(opt.get().getRoomName()).isEqualTo(room.getRoomName());
-		assertThat(room.getRoomName()).isEqualTo("gynecology");
+		mockMvc.perform(get("/api/rooms/gynecology")).andExpect(status().isOk())
+				.andExpect(content().json(objectMapper.writeValueAsString(room)));
+	}
 
-		when(roomRepository.findByRoomName(room.getRoomName())).thenReturn(opt);
-		mockMvc.perform(get("/api/rooms/" + room.getRoomName())).andExpect(status().isOk());
+	@Test
+	void shouldCreateRoom() throws Exception {
+		Room roomToCreate = new Room("dermatology");
 
-	}*/
-@WebMvcTest(RoomController.class)
-class RoomControllerUnitTest {
+		mockMvc.perform(post("/api/room").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(roomToCreate))).andExpect(status().isCreated());
+	}
 
-    @MockBean
-    private RoomRepository roomRepository;
+	@Test
+	void shouldDeleteRoomByRoomName() throws Exception {
 
-    @Autowired
-    private MockMvc mockMvc;
+		Room existingRoom = new Room("dermatology");
 
-    @Autowired
-    private ObjectMapper objectMapper;
+		when(roomRepository.findByRoomName("dermatology")).thenReturn(Optional.of(existingRoom));
 
-    @Test
-    void shouldGetAllRooms() throws Exception {
-        List<Room> rooms = Arrays.asList( new Room("gynecology"), new Room("dermatology"));
+		mockMvc.perform(delete("/api/rooms/dermatology")).andExpect(status().isOk());
+	}
 
-        when(roomRepository.findAll()).thenReturn(rooms);
-
-        mockMvc.perform(get("/api/rooms"))
-                .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(rooms)));
-    }
-
-    @Test
-    void shouldGetRoomByRoomName() throws Exception {
-        Room room = new Room("gynecology");
-
-        when(roomRepository.findByRoomName("gynecology")).thenReturn(Optional.of(room));
-
-        mockMvc.perform(get("/api/rooms/gynecology"))
-                .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(room)));
-    }
-
-    @Test
-    void shouldCreateRoom() throws Exception {
-        Room roomToCreate = new Room("dermatology");
-
-        mockMvc.perform(post("/api/room")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(roomToCreate)))
-                .andExpect(status().isCreated());
-    }
-
-    @Test
-    void shouldDeleteRoomByRoomName() throws Exception {
-       
-        Room existingRoom = new Room("dermatology");
-
-        
-        when(roomRepository.findByRoomName("dermatology")).thenReturn(Optional.of(existingRoom));
-
-        mockMvc.perform(delete("/api/rooms/dermatology"))
-                .andExpect(status().isOk());
-        }
-
-    @Test
-    void shouldDeleteAllRooms() throws Exception {
-        mockMvc.perform(delete("/api/rooms"))
-                .andExpect(status().isOk());
-        }
+	@Test
+	void shouldDeleteAllRooms() throws Exception {
+		mockMvc.perform(delete("/api/rooms")).andExpect(status().isOk());
+	}
 }
-
-

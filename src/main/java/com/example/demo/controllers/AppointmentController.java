@@ -1,22 +1,23 @@
 package com.example.demo.controllers;
 
-import com.example.demo.repositories.*;
-import com.example.demo.entities.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.entities.Appointment;
+import com.example.demo.repositories.AppointmentRepository;
 
 
 @RestController
@@ -49,29 +50,33 @@ public class AppointmentController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
-    @PostMapping("/appointment")
-	public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment) {
-		Appointment newAppointment = new Appointment(appointment.getPatient(), appointment.getDoctor(),
-				appointment.getRoom(), appointment.getStartsAt(), appointment.getFinishesAt());
-
-		if (newAppointment.getStartsAt().equals(newAppointment.getFinishesAt())) {
+  
+	@PostMapping("/appointment")
+	public ResponseEntity<List<Appointment>> createAppointment(@Validated @RequestBody Appointment appointment) {
+		if (appointment.getRoom() == null || appointment.getDoctor() == null) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		} else {
-			List<Appointment> appointmentList = appointmentRepository.findAll();
-			boolean notOverlaps = true;
-			int i = 0;
+			Appointment newAppointment = new Appointment(appointment.getPatient(), appointment.getDoctor(),
+					appointment.getRoom(), appointment.getStartsAt(), appointment.getFinishesAt());
 
-			while (i < appointmentList.size() && notOverlaps) {
-				notOverlaps = !newAppointment.overlaps(appointmentList.get(i));
-				i++;
-			}
-
-			if (notOverlaps) {
-				appointmentRepository.save(newAppointment);
-				return new ResponseEntity<>(HttpStatus.OK);
+			if (newAppointment.getStartsAt().equals(newAppointment.getFinishesAt())) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+				List<Appointment> appointmentList = appointmentRepository.findAll();
+				boolean notOverlaps = true;
+				int i = 0;
+
+				while (i < appointmentList.size() && notOverlaps) {
+					notOverlaps = !newAppointment.overlaps(appointmentList.get(i));
+					i++;
+				}
+
+				if (notOverlaps) {
+					appointmentRepository.save(newAppointment);
+					return new ResponseEntity<>(HttpStatus.OK);
+				} else {
+					return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+				}
 			}
 		}
 	}
