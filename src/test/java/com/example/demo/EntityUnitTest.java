@@ -22,7 +22,7 @@ import com.example.demo.entities.Patient;
 import com.example.demo.entities.Room;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace=Replace.NONE)
+@AutoConfigureTestDatabase(replace = Replace.NONE)
 @TestInstance(Lifecycle.PER_CLASS)
 class EntityUnitTest {
 
@@ -33,18 +33,13 @@ class EntityUnitTest {
 
 	private Patient p1;
 
-    private Room r1;
+	private Room r1;
 
-    private Appointment a1;
-    private Appointment a2;
-    
-    /** TODO
-     * Implement tests for each Entity class: Doctor, Patient, Room and Appointment.
-     * Make sure you are as exhaustive as possible. Coverage is checked ;)
-     */
-    
-    @Test
-	void testDoctorEntityPersistence() {
+	private Appointment a1;
+	private Appointment a2;
+
+	@Test
+	void testDoctorEntityPersistence() throws Exception {
 		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
 
 		entityManager.persist(d1);
@@ -59,21 +54,21 @@ class EntityUnitTest {
 	}
 
 	@Test
-	void testDoctorEntityNull() {
+	void testDoctorEntityNull() throws Exception {
 		d1 = new Doctor();
 		entityManager.persist(d1);
 		Doctor retrievedDoctorNull = entityManager.find(Doctor.class, d1.getId());
 
 		assertThat(retrievedDoctorNull).isNotNull();
-		assertThat(retrievedDoctorNull.getFirstName()).isNull();
-		assertThat(retrievedDoctorNull.getLastName()).isNull();
+		assertThat(retrievedDoctorNull.getFirstName()).withFailMessage("First name should be null").isNull();
+		assertThat(retrievedDoctorNull.getLastName()).withFailMessage("Last name should be null").isNull();
 		assertThat(retrievedDoctorNull.getAge()).isEqualTo(0);
-		assertThat(retrievedDoctorNull.getEmail()).isNull();
+		assertThat(retrievedDoctorNull.getEmail()).withFailMessage("Email should be null").isNull();
 	}
 
 	// Patient
 	@Test
-	void testPatientEntityPersistence() {
+	void testPatientEntityPersistence() throws Exception {
 		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");
 		entityManager.persist(p1);
 
@@ -87,21 +82,21 @@ class EntityUnitTest {
 	}
 
 	@Test
-	void testPatientEntityNull() {
+	void testPatientEntityNull() throws Exception {
 		p1 = new Patient();
 		entityManager.persist(p1);
 		Patient retrievedPatientNull = entityManager.find(Patient.class, p1.getId());
 
 		assertThat(retrievedPatientNull).isNotNull();
-		assertThat(retrievedPatientNull.getFirstName()).isNull();
-		assertThat(retrievedPatientNull.getLastName()).isNull();
+		assertThat(retrievedPatientNull.getFirstName()).withFailMessage("First name should be null").isNull();
+		assertThat(retrievedPatientNull.getLastName()).withFailMessage("Last name should be null").isNull();
 		assertThat(retrievedPatientNull.getAge()).isEqualTo(0);
-		assertThat(retrievedPatientNull.getEmail()).isNull();
+		assertThat(retrievedPatientNull.getEmail()).withFailMessage("Email should be null").isNull();
 	}
 
 	// Room
 	@Test
-	void testRoomEntityPersistence() {
+	void testRoomEntityPersistence() throws Exception {
 		r1 = new Room("gynecology");
 
 		entityManager.persist(r1);
@@ -112,9 +107,8 @@ class EntityUnitTest {
 		assertThat(retrievedRoom.getRoomName()).isEqualTo("gynecology");
 	}
 
-	// Appointment
 	@Test
-	void testAppointmentEntityPersistence() {
+	void testAppointmentEntityPersistence() throws Exception {
 		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
 		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");
 		r1 = new Room("gynecology");
@@ -140,7 +134,7 @@ class EntityUnitTest {
 	}
 
 	@Test
-	void testAppointmentEntityPersistenceNull() {
+	void testAppointmentEntityPersistenceNull() throws Exception {
 		a1 = new Appointment();
 
 		entityManager.persist(a1);
@@ -148,18 +142,16 @@ class EntityUnitTest {
 		Appointment retrievedAppointment = entityManager.find(Appointment.class, a1.getId());
 
 		assertThat(retrievedAppointment).isNotNull();
-		assertThat(retrievedAppointment.getPatient()).isNull();
-		assertThat(retrievedAppointment.getDoctor()).isNull();
-		assertThat(retrievedAppointment.getRoom()).isNull();
-		assertThat(retrievedAppointment.getStartsAt()).isNull();
-		assertThat(retrievedAppointment.getFinishesAt()).isNull();
-
+		assertThat(retrievedAppointment.getPatient()).withFailMessage("Patient should be null").isNull();
+		assertThat(retrievedAppointment.getDoctor()).withFailMessage("Doctor should be null").isNull();
+		assertThat(retrievedAppointment.getRoom()).withFailMessage("Room should be null").isNull();
+		assertThat(retrievedAppointment.getStartsAt()).withFailMessage("StartsAt should be null").isNull();
+		assertThat(retrievedAppointment.getFinishesAt()).withFailMessage("FinishesAt should be null").isNull();
 	}
 
 	@Test
-	void testValidDateTimeFormat() {
+	void testValidDateTimeFormat() throws Exception {
 
-		// String validDateTimeString = "23:59 22/10/2023";
 		LocalDateTime validDateTime = LocalDateTime.of(2023, 10, 22, 23, 59);
 
 		Appointment appointment = new Appointment();
@@ -177,7 +169,7 @@ class EntityUnitTest {
 	}
 
 	@Test
-	void testAppointmentRelationship() {
+	void testAppointmentRelationship() throws Exception {
 		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
 		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");
 		r1 = new Room("gynecology");
@@ -199,13 +191,11 @@ class EntityUnitTest {
 	}
 
 	@Test
-	void testAppointmentOverlapsCase1() {
-		// Case 1: A.starts == B.starts
-		
-		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
-		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");		
-		r1 = new Room("gynecology");
+	void testAppointmentOverlapsCase1() throws Exception {
 
+		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
+		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");
+		r1 = new Room("gynecology");
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
@@ -221,13 +211,11 @@ class EntityUnitTest {
 	}
 
 	@Test
-	void testAppointmentOverlapsCase2() {
-		// Case 2: A.finishes == B.finishes
-		
+	void testAppointmentOverlapsCase2() throws Exception {
+
 		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
 		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");
 		r1 = new Room("gynecology");
-
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
@@ -244,67 +232,63 @@ class EntityUnitTest {
 	}
 
 	@Test
-	void testAppointmentOverlapsCase3() {
-		// Case 3: A.starts < B.finishes && B.finishes < A.finishes
-		
+	void testAppointmentOverlapsCase3() throws Exception {
+
 		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
 		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");
 		r1 = new Room("gynecology");
 
-		
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
 		LocalDateTime startsAtA = LocalDateTime.parse("19:30 22/10/2023", formatter);
 		LocalDateTime finishesAtA = LocalDateTime.parse("20:30 22/10/2023", formatter);
 		LocalDateTime startsAtB = LocalDateTime.parse("20:00 22/10/2023", formatter);
 		LocalDateTime finishesAtB = LocalDateTime.parse("20:15 22/10/2023", formatter);
-		
+
 		a1 = new Appointment(p1, d1, r1, startsAtA, finishesAtA);
 		a2 = new Appointment(p1, d1, r1, startsAtB, finishesAtB);
-		
+
 		assertTrue(a1.overlaps(a2));
 
 	}
 
 	@Test
-	void testAppointmentOverlapsCase4() {
-		 // Case 4: B.starts < A.starts && A.finishes < B.finishes
-		
+	void testAppointmentOverlapsCase4() throws Exception {
+
 		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
-		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");		
+		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");
 		r1 = new Room("gynecology");
 
-		
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
 		LocalDateTime startsAtA = LocalDateTime.parse("19:30 22/10/2023", formatter);
 		LocalDateTime finishesAtA = LocalDateTime.parse("20:00 22/10/2023", formatter);
 		LocalDateTime startsAtB = LocalDateTime.parse("19:00 22/10/2023", formatter);
 		LocalDateTime finishesAtB = LocalDateTime.parse("19:45 22/10/2023", formatter);
-		
+
 		a1 = new Appointment(p1, d1, r1, startsAtA, finishesAtA);
 		a2 = new Appointment(p1, d1, r1, startsAtB, finishesAtB);
-		
+
 		assertTrue(a1.overlaps(a2));
 	}
 
 	@Test
-	void testAppointmentOverlaps() {
+	void testAppointmentOverlaps() throws Exception {
 		d1 = new Doctor("Marcos", "Corporan", 28, "Mcorporan@hospital.com");
-		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");		
+		p1 = new Patient("Juana", "Sosa", 53, "jsosa@xmail.com");
 		r1 = new Room("gynecology");
 
-		
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
 		LocalDateTime startsAtA = LocalDateTime.parse("10:00 23/10/2023", formatter);
 		LocalDateTime finishesAtA = LocalDateTime.parse("10:30 23/10/2023", formatter);
 		LocalDateTime startsAtB = LocalDateTime.parse("11:30 23/10/2023", formatter);
 		LocalDateTime finishesAtB = LocalDateTime.parse("12:00 23/10/2023", formatter);
-		
+
 		a1 = new Appointment(p1, d1, r1, startsAtA, finishesAtA);
 		a2 = new Appointment(p1, d1, r1, startsAtB, finishesAtB);
-		
+
 		assertFalse(a1.overlaps(a2));
 	}
+
 }

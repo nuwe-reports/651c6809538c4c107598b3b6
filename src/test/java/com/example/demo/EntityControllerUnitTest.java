@@ -30,11 +30,6 @@ import com.example.demo.repositories.PatientRepository;
 import com.example.demo.repositories.RoomRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * TODO Implement all the unit test in its corresponding class. Make sure to be
- * as exhaustive as possible. Coverage is checked ;)
- */
-
 @WebMvcTest(DoctorController.class)
 class DoctorControllerUnitTest {
 
