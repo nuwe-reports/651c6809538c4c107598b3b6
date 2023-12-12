@@ -19,88 +19,88 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.entities.Appointment;
 import com.example.demo.repositories.AppointmentRepository;
 
-
 @RestController
 @RequestMapping("/api")
 public class AppointmentController {
 
-    @Autowired
-    AppointmentRepository appointmentRepository;
+	@Autowired
+	AppointmentRepository appointmentRepository;
 
-    @GetMapping("/appointments")
-    public ResponseEntity<List<Appointment>> getAllAppointments(){
-        List<Appointment> appointments = new ArrayList<>();
+	@GetMapping("/appointments")
+	public ResponseEntity<List<Appointment>> getAllAppointments() {
+		List<Appointment> appointments = new ArrayList<>();
 
-        appointmentRepository.findAll().forEach(appointments::add);
+		appointmentRepository.findAll().forEach(appointments::add);
 
-        if (appointments.isEmpty()){
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
+		if (appointments.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
 
-        return new ResponseEntity<>(appointments, HttpStatus.OK);
-    }
+		return new ResponseEntity<>(appointments, HttpStatus.OK);
+	}
 
-    @GetMapping("/appointments/{id}")
-    public ResponseEntity<Appointment> getAppointmentById(@PathVariable("id") long id){
-        Optional<Appointment> appointment = appointmentRepository.findById(id);
+	@GetMapping("/appointments/{id}")
+	public ResponseEntity<Appointment> getAppointmentById(@PathVariable("id") long id) {
+		Optional<Appointment> appointment = appointmentRepository.findById(id);
 
-        if (appointment.isPresent()){
-            return new ResponseEntity<>(appointment.get(),HttpStatus.OK);
-        }else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-  
-	@PostMapping("/appointment")
-	public ResponseEntity<List<Appointment>> createAppointment(@Validated @RequestBody Appointment appointment) {
-		if (appointment.getRoom() == null || appointment.getDoctor() == null) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		if (appointment.isPresent()) {
+			return new ResponseEntity<>(appointment.get(), HttpStatus.OK);
 		} else {
-			Appointment newAppointment = new Appointment(appointment.getPatient(), appointment.getDoctor(),
-					appointment.getRoom(), appointment.getStartsAt(), appointment.getFinishesAt());
-
-			if (newAppointment.getStartsAt().equals(newAppointment.getFinishesAt())) {
-				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-			} else {
-				List<Appointment> appointmentList = appointmentRepository.findAll();
-				boolean notOverlaps = true;
-				int i = 0;
-
-				while (i < appointmentList.size() && notOverlaps) {
-					notOverlaps = !newAppointment.overlaps(appointmentList.get(i));
-					i++;
-				}
-
-				if (notOverlaps) {
-					appointmentRepository.save(newAppointment);
-					return new ResponseEntity<>(HttpStatus.OK);
-				} else {
-					return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
-				}
-			}
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 
+	@PostMapping("/appointment")
+	public ResponseEntity<List<Appointment>> createAppointment( @RequestBody Appointment appointment) {
+		if (invalidAppointment(appointment)) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 
-    @DeleteMapping("/appointments/{id}")
-    public ResponseEntity<HttpStatus> deleteAppointment(@PathVariable("id") long id){
+		Appointment newAppointment = createNewAppointment(appointment);
 
-        Optional<Appointment> appointment = appointmentRepository.findById(id);
+		if (hasOverlap(newAppointment)) {
+			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+		}
 
-        if (!appointment.isPresent()){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+		appointmentRepository.save(newAppointment);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 
-        appointmentRepository.deleteById(id);
+	private boolean invalidAppointment(Appointment appointment) {
+		return appointment.getRoom() == null || appointment.getDoctor() == null
+				|| appointment.getStartsAt().equals(appointment.getFinishesAt());
+	}
 
-        return new ResponseEntity<>(HttpStatus.OK);
-        
-    }
+	private Appointment createNewAppointment(Appointment appointment) {
+		return new Appointment(appointment.getPatient(), appointment.getDoctor(), appointment.getRoom(),
+				appointment.getStartsAt(), appointment.getFinishesAt());
+	}
 
-    @DeleteMapping("/appointments")
-    public ResponseEntity<HttpStatus> deleteAllAppointments(){
-        appointmentRepository.deleteAll();
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
+	private boolean hasOverlap(Appointment newAppointment) {
+		List<Appointment> appointmentList = appointmentRepository.findAll();
+
+		return appointmentList.stream().anyMatch(existingAppointment -> newAppointment.overlaps(existingAppointment));
+	}
+
+	@DeleteMapping("/appointments/{id}")
+	public ResponseEntity<HttpStatus> deleteAppointment(@PathVariable("id") long id) {
+
+		Optional<Appointment> appointment = appointmentRepository.findById(id);
+
+		if (!appointment.isPresent()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		appointmentRepository.deleteById(id);
+
+		return new ResponseEntity<>(HttpStatus.OK);
+
+	}
+
+	@DeleteMapping("/appointments")
+	public ResponseEntity<HttpStatus> deleteAllAppointments() {
+		appointmentRepository.deleteAll();
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 
 }
