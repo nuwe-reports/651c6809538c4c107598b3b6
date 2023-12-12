@@ -48,38 +48,48 @@ public class AppointmentController {
 		} else {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-	}
-
+	}	
+	
 	@PostMapping("/appointment")
-	public ResponseEntity<List<Appointment>> createAppointment( @RequestBody Appointment appointment) {
-		if (invalidAppointment(appointment)) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		}
+	public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment) {
+	    try {
+	        if (invalidAppointment(appointment)) {
+	            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+	        }
 
-		Appointment newAppointment = createNewAppointment(appointment);
+	        Appointment newAppointment = createNewAppointment(appointment);
 
-		if (hasOverlap(newAppointment)) {
-			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
-		}
+	        if (hasOverlap(newAppointment)) {
+	            return new ResponseEntity<>( HttpStatus.NOT_ACCEPTABLE);
+	        }
 
-		appointmentRepository.save(newAppointment);
-		return new ResponseEntity<>(HttpStatus.OK);
+	        appointmentRepository.save(newAppointment);
+	        return new ResponseEntity<>(HttpStatus.OK);
+	    } catch (Exception ex) {
+	        return new ResponseEntity<>( HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 	}
 
 	private boolean invalidAppointment(Appointment appointment) {
-		return appointment.getRoom() == null || appointment.getDoctor() == null
-				|| appointment.getStartsAt().equals(appointment.getFinishesAt());
+	    return appointment.getRoom() == null || 
+	           appointment.getDoctor() == null ||
+	           appointment.getStartsAt() == null ||
+	           appointment.getFinishesAt() == null ||
+	           appointment.getStartsAt().isEqual(appointment.getFinishesAt());
 	}
 
 	private Appointment createNewAppointment(Appointment appointment) {
-		return new Appointment(appointment.getPatient(), appointment.getDoctor(), appointment.getRoom(),
-				appointment.getStartsAt(), appointment.getFinishesAt());
+	    return new Appointment(appointment.getPatient(), 
+	                           appointment.getDoctor(), 
+	                           appointment.getRoom(),
+	                           appointment.getStartsAt(),
+	                           appointment.getFinishesAt());
 	}
 
 	private boolean hasOverlap(Appointment newAppointment) {
-		List<Appointment> appointmentList = appointmentRepository.findAll();
-
-		return appointmentList.stream().anyMatch(existingAppointment -> newAppointment.overlaps(existingAppointment));
+	    List<Appointment> appointmentList = appointmentRepository.findAll();
+	    return appointmentList.stream()
+	                          .anyMatch(existingAppointment -> newAppointment.overlaps(existingAppointment));
 	}
 
 	@DeleteMapping("/appointments/{id}")
