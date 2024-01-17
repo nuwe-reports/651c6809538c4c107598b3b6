@@ -48,33 +48,33 @@ public class AppointmentController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}	
-	
-	 @PostMapping("/appointment")
-		public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointmentDTO) {
-		 
-			Appointment newAppointment = new Appointment(appointmentDTO.getPatient(), appointmentDTO.getDoctor(),
-					appointmentDTO.getRoom(), appointmentDTO.getStartsAt(), appointmentDTO.getFinishesAt());
+  
+ @PostMapping("/appointment")
+	    @Transactional
+	    public ResponseEntity<List<Appointment>> createAppointment(@Validated @RequestBody Appointment appointment) {
+	        try {
+	            Appointment newAppointment = new Appointment(appointment.getPatient(), appointment.getDoctor(),
+	                    appointment.getRoom(), appointment.getStartsAt(), appointment.getFinishesAt());
 
-			if (newAppointment.getStartsAt().equals(newAppointment.getFinishesAt())) {
-				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-			} else {
-				List<Appointment> appointmentList = appointmentRepository.findAll();
-				boolean notOverlaps = true;
-				int i = 0;
-
-				while (i < appointmentList.size() && notOverlaps) {
-					notOverlaps = !newAppointment.overlaps(appointmentList.get(i));
-					i++;
-				}
-
-				if (notOverlaps) {
-					appointmentRepository.save(newAppointment);
-					return new ResponseEntity<>(HttpStatus.OK);
+	            if (newAppointment.getStartsAt().equals(newAppointment.getFinishesAt())) {
+					return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 				} else {
-					return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+
+	            List<Appointment> appointmentList = appointmentRepository.findAll();
+	            boolean notOverlaps = appointmentList.stream().noneMatch(newAppointment::overlaps);
+
+	            if (notOverlaps) {
+	                appointmentRepository.save(newAppointment);
+	                return new ResponseEntity<>(HttpStatus.OK);
+	            } else {
+	                return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+	            }
 				}
-			}
-		}
+	        } catch (Exception e) {
+	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+	        }
+	    }
+  
 	@DeleteMapping("/appointments/{id}")
 	public ResponseEntity<HttpStatus> deleteAppointment(@PathVariable("id") long id) {
 
