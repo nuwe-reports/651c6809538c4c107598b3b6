@@ -7,7 +7,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,48 +49,32 @@ public class AppointmentController {
 		}
 	}	
 	
-	@PostMapping("/appointment")
-	public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment) {
-	    try {
-	        if (invalidAppointment(appointment)) {
-	            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-	        }
+	 @PostMapping("/appointment")
+		public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointmentDTO) {
+		 
+			Appointment newAppointment = new Appointment(appointmentDTO.getPatient(), appointmentDTO.getDoctor(),
+					appointmentDTO.getRoom(), appointmentDTO.getStartsAt(), appointmentDTO.getFinishesAt());
 
-	        Appointment newAppointment = createNewAppointment(appointment);
+			if (newAppointment.getStartsAt().equals(newAppointment.getFinishesAt())) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			} else {
+				List<Appointment> appointmentList = appointmentRepository.findAll();
+				boolean notOverlaps = true;
+				int i = 0;
 
-	        if (hasOverlap(newAppointment)) {
-	            return new ResponseEntity<>( HttpStatus.NOT_ACCEPTABLE);
-	        }
+				while (i < appointmentList.size() && notOverlaps) {
+					notOverlaps = !newAppointment.overlaps(appointmentList.get(i));
+					i++;
+				}
 
-	        appointmentRepository.save(newAppointment);
-	        return new ResponseEntity<>(HttpStatus.OK);
-	    } catch (Exception ex) {
-	        return new ResponseEntity<>( HttpStatus.INTERNAL_SERVER_ERROR);
-	    }
-	}
-
-	private boolean invalidAppointment(Appointment appointment) {
-	    return appointment.getRoom() == null || 
-	           appointment.getDoctor() == null ||
-	           appointment.getStartsAt() == null ||
-	           appointment.getFinishesAt() == null ||
-	           appointment.getStartsAt().isEqual(appointment.getFinishesAt());
-	}
-
-	private Appointment createNewAppointment(Appointment appointment) {
-	    return new Appointment(appointment.getPatient(), 
-	                           appointment.getDoctor(), 
-	                           appointment.getRoom(),
-	                           appointment.getStartsAt(),
-	                           appointment.getFinishesAt());
-	}
-
-	private boolean hasOverlap(Appointment newAppointment) {
-	    List<Appointment> appointmentList = appointmentRepository.findAll();
-	    return appointmentList.stream()
-	                          .anyMatch(existingAppointment -> newAppointment.overlaps(existingAppointment));
-	}
-
+				if (notOverlaps) {
+					appointmentRepository.save(newAppointment);
+					return new ResponseEntity<>(HttpStatus.OK);
+				} else {
+					return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+				}
+			}
+		}
 	@DeleteMapping("/appointments/{id}")
 	public ResponseEntity<HttpStatus> deleteAppointment(@PathVariable("id") long id) {
 
